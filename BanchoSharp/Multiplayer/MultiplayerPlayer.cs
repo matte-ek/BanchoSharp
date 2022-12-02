@@ -20,6 +20,10 @@ public class MultiplayerPlayer
 	public int? Score { get; set; }
 	public bool? Passed { get; set; }
 
+	// The preferred way to target players in commands, such as "!mp host". Will attempt to use
+	// the player's id if available, otherwise it will use the name with all spaces replaced.
+	internal string Identifier => Id == null ? Name.Replace(' ','_') : $"#{Id}";
+
 	public MultiplayerPlayer(string name, int slot, TeamColor team = TeamColor.None, Mods mods = Mods.None)
 	{
 		Name = name;

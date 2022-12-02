@@ -133,7 +133,7 @@ public class MultiplayerLobby : Channel, IMultiplayerLobby
 		Size = newSize;
 	}
 
-	public async Task MoveAsync(string player, int slot) => await SendAsync($"!mp move {player} {slot}");
+	public async Task MoveAsync(MultiplayerPlayer player, int slot) => await SendAsync($"!mp move {player.Identifier} {slot}");
 
 	public async Task RenameAsync(string newName)
 	{
@@ -169,10 +169,10 @@ public class MultiplayerLobby : Channel, IMultiplayerLobby
 		Host = null;
 	}
 
-	public async Task SetHostAsync(string username)
+	public async Task SetHostAsync(MultiplayerPlayer player)
 	{
-		await SendAsync($"!mp host {username}");
-		Host = FindPlayer(username);
+		await SendAsync($"!mp host {player.Identifier}");
+		Host = player;
 
 		OnHostChanged?.Invoke(Host!);
 	}
@@ -195,8 +195,8 @@ public class MultiplayerLobby : Channel, IMultiplayerLobby
 	}
 
 	public async Task StartAsync() => await SendAsync("!mp start");
-	public async Task KickAsync(string username) => await SendAsync($"!mp kick {username}");
-	public async Task BanAsync(string username) => await SendAsync($"!mp ban {username}");
+	public async Task KickAsync(MultiplayerPlayer player) => await SendAsync($"!mp kick {player.Identifier}");
+	public async Task BanAsync(MultiplayerPlayer player) => await SendAsync($"!mp ban {player.Identifier}");
 
 	public async Task AddRefereeAsync(params string[] usernames)
 	{
@@ -224,6 +224,8 @@ public class MultiplayerLobby : Channel, IMultiplayerLobby
 
 		await SendAsync($"!mp map {beatmap.Id} {modeNum}");
 	}
+	
+	public MultiplayerPlayer? FindPlayer(string name) => Players.Find(x => x.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
 	
 	private void RegisterEvents()
 	{
@@ -339,7 +341,7 @@ public class MultiplayerLobby : Channel, IMultiplayerLobby
 			OnMatchAborted?.Invoke();
 		}
 	}
-
+	
 	private bool IsRoomNameNotification(string banchoResponse) => banchoResponse.StartsWith("Room name: ");
 	private bool IsTeamModeNotification(string banchoResponse) => banchoResponse.StartsWith("Team mode: ");
 	private bool IsHostChangingMapNotification(string banchoResponse) => banchoResponse.Equals("Host is changing map...");
@@ -359,9 +361,7 @@ public class MultiplayerLobby : Channel, IMultiplayerLobby
 	private bool IsPlayerLeftNotification(string banchoResponse) => banchoResponse.EndsWith(" left the game.");
 	private bool IsAllPlayersReadyNotification(string banchoResponse) => banchoResponse.StartsWith("All players are ready");
 	private bool IsMatchAbortedNotification(string banchoResponse) => banchoResponse.StartsWith("Aborted the match");
-
-	private MultiplayerPlayer? FindPlayer(string name) => Players.Find(x => x.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
-
+	
 	private WinCondition ParseWinCondition(string wc) => wc switch
 	{
 		"Score" => WinCondition.Score,
