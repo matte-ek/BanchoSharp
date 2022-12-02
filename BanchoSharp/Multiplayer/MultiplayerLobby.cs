@@ -57,28 +57,7 @@ public class MultiplayerLobby : Channel, IMultiplayerLobby
 		Id = id;
 		Name = name;
 
-		_client.OnMessageReceived += m =>
-		{
-			if (m is IPrivateIrcMessage { Sender: "BanchoBot" } pm && pm.Recipient == ChannelName)
-			{
-				UpdateLobbyFromBanchoBotSettingsResponse(pm.Content);
-			}
-		};
-
-		OnMatchStarted += () =>
-		{
-			ResetLobbyTimer();
-			ResetMatchTimer();
-		};
-
-		OnMatchFinished += () =>
-		{
-			ResetLobbyTimer();
-			ResetMatchTimer();
-		};
-
-		OnPlayerJoined += player => Players.Add(player);
-		OnPlayerDisconnected += disconnectedEventArgs => Players.Remove(disconnectedEventArgs.Player);
+		RegisterEvents();
 	}
 
 	public event Action? OnSettingsUpdated;
@@ -97,6 +76,7 @@ public class MultiplayerLobby : Channel, IMultiplayerLobby
 	public event Action<PlayerSlotMoveEventArgs>? OnPlayerSlotMove;
 	public event Action<PlayerDisconnectedEventArgs>? OnPlayerDisconnected;
 	public event Action? OnHostChangingMap;
+	public event Action? OnAllPlayersReady;
 	public long Id { get; }
 	public string Name { get; private set; }
 	public string HistoryUrl => $"https://osu.ppy.sh/mp/{Id}";
@@ -244,8 +224,47 @@ public class MultiplayerLobby : Channel, IMultiplayerLobby
 		await SendAsync($"!mp map {beatmap.Id} {modeNum}");
 	}
 
+	private void RegisterEvents()
+	{
+		_client.OnMessageReceived += m =>
+		{
+			if (m is IPrivateIrcMessage { Sender: "BanchoBot" } pm && pm.Recipient == ChannelName)
+			{
+				UpdateLobbyFromBanchoBotSettingsResponse(pm.Content);
+			}
+		};
+
+		OnMatchStarted += () =>
+		{
+			ResetLobbyTimer();
+			ResetMatchTimer();
+
+			MatchInProgress = true;
+		};
+
+		OnMatchFinished += () =>
+		{
+			ResetLobbyTimer();
+			ResetMatchTimer();
+
+			MatchInProgress = false;
+		};
+
+		OnMatchAborted += () =>
+		{
+			MatchInProgress = false;
+		};
+
+		OnHostChangingMap += () =>
+		{
+			HostIsChangingMap = true;
+		};
+
+		OnPlayerJoined += player => Players.Add(player);
+		OnPlayerDisconnected += disconnectedEventArgs => Players.Remove(disconnectedEventArgs.Player);
+	}
+
 	public async Task SendHelpMessageAsync() => await SendAsync("!mp help");
-	public event Action? OnAllPlayersReady;
 	private void ResetLobbyTimer() => _lobbyTimerEnd = null;
 	private void ResetMatchTimer() => _matchTimerEnd = null;
 
@@ -261,7 +280,6 @@ public class MultiplayerLobby : Channel, IMultiplayerLobby
 		}
 		else if (IsHostChangingMapNotification(banchoResponse))
 		{
-			HostIsChangingMap = true;
 			OnHostChangingMap?.Invoke();
 		}
 		else if (IsBeatmapChangedNotification(banchoResponse))
@@ -275,12 +293,10 @@ public class MultiplayerLobby : Channel, IMultiplayerLobby
 		else if (IsMatchStartedNotification(banchoResponse))
 		{
 			OnMatchStarted?.Invoke();
-			MatchInProgress = true;
 		}
 		else if (IsMatchFinishedNotification(banchoResponse))
 		{
 			OnMatchFinished?.Invoke();
-			MatchInProgress = false;
 		}
 		else if (IsPlayerMovedToSlotNotification(banchoResponse))
 		{
@@ -321,7 +337,6 @@ public class MultiplayerLobby : Channel, IMultiplayerLobby
 		else if (IsMatchAbortedNotification(banchoResponse))
 		{
 			OnMatchAborted?.Invoke();
-			MatchInProgress = false;
 		}
 	}
 
