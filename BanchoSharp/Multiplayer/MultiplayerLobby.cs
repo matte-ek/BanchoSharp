@@ -125,6 +125,7 @@ public class MultiplayerLobby : Channel, IMultiplayerLobby
 	}
 
 	public async Task DisplaySettingsAsync() => await SendAsync("!mp settings");
+	public async Task SendHelpMessageAsync() => await SendAsync("!mp help");
 
 	public async Task SetSizeAsync(int newSize)
 	{
@@ -223,7 +224,7 @@ public class MultiplayerLobby : Channel, IMultiplayerLobby
 
 		await SendAsync($"!mp map {beatmap.Id} {modeNum}");
 	}
-
+	
 	private void RegisterEvents()
 	{
 		_client.OnMessageReceived += m =>
@@ -264,7 +265,6 @@ public class MultiplayerLobby : Channel, IMultiplayerLobby
 		OnPlayerDisconnected += disconnectedEventArgs => Players.Remove(disconnectedEventArgs.Player);
 	}
 
-	public async Task SendHelpMessageAsync() => await SendAsync("!mp help");
 	private void ResetLobbyTimer() => _lobbyTimerEnd = null;
 	private void ResetMatchTimer() => _matchTimerEnd = null;
 
@@ -272,11 +272,11 @@ public class MultiplayerLobby : Channel, IMultiplayerLobby
 	{
 		if (IsRoomNameNotification(banchoResponse))
 		{
-			UpdateName(banchoResponse);
+			UpdateRoomName(banchoResponse);
 		}
 		else if (IsTeamModeNotification(banchoResponse))
 		{
-			UpdateFormatWincondition(banchoResponse);
+			UpdateFormatWinCondition(banchoResponse);
 		}
 		else if (IsHostChangingMapNotification(banchoResponse))
 		{
@@ -359,18 +359,6 @@ public class MultiplayerLobby : Channel, IMultiplayerLobby
 	private bool IsPlayerLeftNotification(string banchoResponse) => banchoResponse.EndsWith(" left the game.");
 	private bool IsAllPlayersReadyNotification(string banchoResponse) => banchoResponse.StartsWith("All players are ready");
 	private bool IsMatchAbortedNotification(string banchoResponse) => banchoResponse.StartsWith("Aborted the match");
-	
-	private void UpdateName(string banchoResponse)
-	{
-		// Process room name
-
-		// Index of where the multiplayer lobby name begins
-		int index = banchoResponse.LastIndexOf(',');
-		string nameSub = banchoResponse[..index];
-		string name = nameSub.Split(':')[1].Trim();
-
-		Name = name;
-	}
 
 	private MultiplayerPlayer? FindPlayer(string name) => Players.Find(x => x.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
 
@@ -404,6 +392,17 @@ public class MultiplayerLobby : Channel, IMultiplayerLobby
 	private async Task SendAsync(string command) => await _client.SendAsync($"PRIVMSG {ChannelName} {command}");
 
 #region MultiplayerLobby update methods
+
+	private void UpdateRoomName(string banchoResponse)
+	{
+		// Index of where the multiplayer lobby name begins
+		int index = banchoResponse.LastIndexOf(',');
+		string nameSub = banchoResponse[..index];
+		string name = nameSub.Split(':')[1].Trim();
+
+		Name = name;
+	}
+
 	private void UpdateMatchHost(string banchoResponse)
 	{
 		string hostPlayerName = banchoResponse.Split(" became the host")[0];
@@ -622,7 +621,7 @@ public class MultiplayerLobby : Channel, IMultiplayerLobby
 		OnBeatmapChanged?.Invoke(new BeatmapShell(int.Parse(idSub), GameMode));
 	}
 
-	private void UpdateFormatWincondition(string banchoResponse)
+	private void UpdateFormatWinCondition(string banchoResponse)
 	{
 		// Update team mode and win condition
 
