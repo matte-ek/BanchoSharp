@@ -20,12 +20,15 @@ public class MultiplayerPlayer
 	public int? Score { get; set; }
 	public bool? Passed { get; set; }
 
+	public DateTime JoinTime { get; }
+
 	public MultiplayerPlayer(string name, int slot, TeamColor team = TeamColor.None, Mods mods = Mods.None)
 	{
 		Name = name;
 		Slot = slot;
 		Team = team;
 		Mods = mods;
+		JoinTime = DateTime.Now;
 	}
 
 	public override bool Equals(object? other) => other?.GetType() == typeof(MultiplayerPlayer) && 
