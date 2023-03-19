@@ -15,9 +15,9 @@ public enum LobbyFormat
 public enum WinCondition
 {
 	Score,
-	ScoreV2,
 	Accuracy,
-	Combo
+	Combo,
+    ScoreV2
 }
 
 public enum GameMode
