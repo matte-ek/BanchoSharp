@@ -415,6 +415,14 @@ public class MultiplayerLobby : Channel, IMultiplayerLobby
 
 		string playerName = banchoResponse.Substring(playerNameBegin, 16).Trim();
 
+		// Bancho's formatting on the name and the player mods makes it really annoying to find where the mods begin, and where the player name ends.
+		// There's no perfect solution to this, as a player name could always begin with a opening square bracket, which makes finding the first of those
+		// not a viable solution. But to avoid creating additional an additional player, with their name trimmed to 16 characters, we make sure to test for this.
+		if (playerName.Length == 16 && Players.Any(x => x.Name.Length >= 16 && x.Name.StartsWith(playerName)))
+		{
+			playerName = Players.FirstOrDefault(x => x.Name.StartsWith(playerName))?.Name ?? playerName;
+		}
+
 		// Bancho may send extra player info after the name, for example "[Host / HardRock]", after the 16
 		// character player name bit.
 		string? playerInfo = banchoResponse.Length > (playerNameBegin + 16) ? banchoResponse[(playerNameBegin + 16)..] : null;
