@@ -1,3 +1,5 @@
+using System.Net.Sockets;
+
 namespace BanchoSharp.Interfaces;
 
 /// <summary>
@@ -7,6 +9,8 @@ namespace BanchoSharp.Interfaces;
 /// </summary>
 public interface IBanchoClient : IDisposable
 {
+	public TcpClient? TcpClient { get; set; }
+	
 	public BanchoClientConfig ClientConfig { get; set; }
 	/// <summary>
 	/// Interface responsible for the processing of all events related to BanchoBot. Subscribe to this
