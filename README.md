@@ -1,5 +1,10 @@
 # BanchoSharp
 
+Small fork for my bancho multiplayer bot, it's not 1:1 up to date with upstream (using an older version), and it also
+contains changes to make the internal `TcpClient` public, and some other minor stuff. I want to eventually make the fork
+closer to upstream, but I don't think I'll be able to make the bot be dependent on that since there are some
+changes I want that are breaking changes.
+
 ## Synopsis
 The solution for connecting to osu!Bancho in C#. This library provides various events and tools for working with osu!Bancho, [osu!](https://osu.ppy.sh/home)'s IRC server.
 
