@@ -20,7 +20,7 @@ public class MultiplayerPlayer
 	public int? Score { get; set; }
 	public bool? Passed { get; set; }
 
-	public DateTime JoinTime { get; }
+	public DateTime JoinTime { get; set; }
 
 	public MultiplayerPlayer(string name, int slot, TeamColor team = TeamColor.None, Mods mods = Mods.None)
 	{
